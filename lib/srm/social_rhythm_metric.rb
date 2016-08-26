@@ -25,7 +25,7 @@ class SocialRhythmMetric
     end
 
     srm = sum(number_of_hits).to_f / number_of_hits.length.to_f
-    puts "SRM: #{srm}"
+
     srm
   end
 
@@ -87,4 +87,4 @@ class SocialRhythmMetric
   end
 end
 
-SocialRhythmMetric.new.calculate_srm(ARGV[0])
+# SocialRhythmMetric.new.calculate_srm(ARGV[0])
