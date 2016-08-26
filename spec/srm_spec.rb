@@ -3,7 +3,7 @@
 require 'spec_helper'
 require_relative '../lib/srm/social_rhythm_metric.rb'
 
-RSpec.describe 'Social Rhythm Metric', type: :feature do
+RSpec.describe 'Social Rhythm Metric' do
   let(:srm) { SocialRhythmMetric.new }
 
   it 'reports correct srm scores' do

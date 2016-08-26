@@ -86,5 +86,3 @@ class SocialRhythmMetric
     Math.sqrt(sample_variance(times))
   end
 end
-
-# SocialRhythmMetric.new.calculate_srm(ARGV[0])
