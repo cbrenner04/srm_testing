@@ -7,40 +7,38 @@ require 'yaml'
 class SocialRhythmMetric
   MINIMUM_SAMPLES = 3
 
-  def calculate_srm
+  def calculate_srm(data_file)
     # read series from yaml
-    series = open('/Users/Chris/Work/srm_data.yml') do |file|
-      YAML.load(file.read)
-    end
+    series = open(data_file) { |file| YAML.load(file.read) }
 
     # declare arrays for later use
     number_of_hits = []
-    total_activities_counted = 0
 
     # `series` is a hash; key = activity type; value = array of activity times
     series.each do |_activity, activity_times|
       # need count of possible hits
       next unless activity_times.length >= MINIMUM_SAMPLES
 
-      total_activities_counted += 1
-
       hits = return_hits(activity_times)
 
       number_of_hits << hits.length
     end
 
-    srm = sum(number_of_hits).to_f / total_activities_counted.to_f
-    puts "SRM: #{sum(number_of_hits).to_f} / #{total_activities_counted.to_f} = #{srm}"
+    srm = sum(number_of_hits).to_f / number_of_hits.length.to_f
+    puts "SRM: #{srm}"
     srm
   end
 
   def return_hits(times)
-    times_in_seconds = convert_time_to_seconds(times)
+    series = convert_time_to_seconds(times)
 
-    mean_time = mean(times_in_seconds)
-    std = standard_deviation(times_in_seconds)
-    offset = 1.5 * std
-    series = remove_outliers(times_in_seconds, mean_time, offset)
+    mean_time = mean(series)
+    std = standard_deviation(series)
+
+    unless std <= 0.5
+      offset = 1.5 * std
+      series = remove_outliers(series, mean_time, offset)
+    end
 
     habitual_time = mean(series)
     hit_range = 45.0 * 60.0
@@ -49,9 +47,9 @@ class SocialRhythmMetric
 
   def convert_time_to_seconds(times)
     times.map do |time|
-      midnight = Time.parse('00:00')
-      time = Time.parse(time)
-      time -= midnight
+      hours = time[0..1].to_i * 60 * 60
+      minutes = time[3..4].to_i * 60
+      time = hours + minutes
       time
     end
   end
@@ -81,7 +79,7 @@ class SocialRhythmMetric
   def sample_variance(times)
     m = mean(times)
     sum = times.inject(0) { |a, e| a + (e - m)**2 }
-    sum / times.length.to_f
+    sum / (times.length - 1).to_f
   end
 
   def standard_deviation(times)
@@ -89,4 +87,4 @@ class SocialRhythmMetric
   end
 end
 
-SocialRhythmMetric.new.calculate_srm
+SocialRhythmMetric.new.calculate_srm(ARGV[0])

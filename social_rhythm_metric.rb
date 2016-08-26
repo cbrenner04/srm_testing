@@ -16,7 +16,6 @@ class SocialRhythmMetric
 
     # declare arrays for later use
     number_of_hits = []
-    total_activities_counted = 0
 
     # `series` is a hash; key = activity type; value = array of activity times
     series.each do |_activity, activity_times|
@@ -24,14 +23,11 @@ class SocialRhythmMetric
 
       # # uncomment if testing paper values
       # activity_times = ["06:00", "05:50", "08:01", "07:55", "05:45", "05:50", "05:50"]
-      # total_activities_counted = 5
       # number_of_hits = [4, 1, 2, 7]
       # # end of paper test comment block
       puts "ACTIVITY TIMES: #{activity_times}"
       # need count of possible hits
       next unless activity_times.length >= MINIMUM_SAMPLES # comment if testing paper values
-
-      total_activities_counted += 1 # comment if testing paper values
 
       hits = return_hits(activity_times)
       puts "HITS: #{hits.map { |h| convert_to_human_readable(h) }} = #{hits.length}\n\n"
@@ -40,21 +36,24 @@ class SocialRhythmMetric
     end # comment if testing paper values
 
     puts "NUMBER OF HITS: #{number_of_hits}"
-    srm = sum(number_of_hits).to_f / total_activities_counted.to_f
-    puts "SRM: #{sum(number_of_hits).to_f} / #{total_activities_counted.to_f} = #{srm}"
+    srm = sum(number_of_hits).to_f / number_of_hits.length.to_f
+    puts "SRM: #{sum(number_of_hits).to_f} / #{number_of_hits.length.to_f} = #{srm}"
     srm
   end
 
   def return_hits(times)
-    times_in_seconds = convert_time_to_seconds(times)
+    series = convert_time_to_seconds(times)
 
-    mean_time = mean(times_in_seconds)
+    mean_time = mean(series)
     puts "MEAN TIME: #{convert_to_human_readable(mean_time)}"
-    std = standard_deviation(times_in_seconds)
+    std = standard_deviation(series)
     puts "STD: #{std / 60.0}"
-    offset = 1.5 * std
-    puts "OFFSET: #{offset / 60.0}"
-    series = remove_outliers(times_in_seconds, mean_time, offset)
+
+    unless std <= 0.5
+      offset = 1.5 * std
+      puts "OFFSET: #{offset / 60.0}"
+      series = remove_outliers(series, mean_time, offset)
+    end
 
     habitual_time = mean(series)
     puts "HABITUAL TIME: #{convert_to_human_readable(habitual_time)}"
@@ -64,9 +63,6 @@ class SocialRhythmMetric
 
   def convert_time_to_seconds(times)
     times.map do |time|
-      # midnight = Time.parse('00:00')
-      # time = Time.parse(time)
-      # time -= midnight
       hours = time[0..1].to_i * 60 * 60
       minutes = time[3..4].to_i * 60
       time = hours + minutes
