@@ -15,6 +15,7 @@ class SocialRhythmMetric
     number_of_hits = []
 
     # `series` is a hash; key = activity type; value = array of activity times
+    # activity times are strings (e.g. "HH:MM" [24 hour clock])
     series.each do |_activity, activity_times|
       # need count of possible hits
       next unless activity_times.length >= MINIMUM_SAMPLES
@@ -24,18 +25,20 @@ class SocialRhythmMetric
       number_of_hits << hits.length
     end
 
-    srm = sum(number_of_hits).to_f / number_of_hits.length.to_f
+    unless  number_of_hits == []
+      srm = sum(number_of_hits).to_f / number_of_hits.length.to_f
+    end
 
-    srm
+    srm || 0
   end
 
   def return_hits(times)
-    series = convert_time_to_seconds(times)
+    series = convert_time_to_seconds(times) # remove when update to EPOCH
 
     mean_time = mean(series)
     std = standard_deviation(series)
 
-    unless std <= 0.5
+    unless std <= 600.0
       offset = 1.5 * std
       series = remove_outliers(series, mean_time, offset)
     end
@@ -45,6 +48,7 @@ class SocialRhythmMetric
     remove_outliers(series, habitual_time, hit_range)
   end
 
+  # this will become obsolete when using EPOCH time
   def convert_time_to_seconds(times)
     times.map do |time|
       hours = time[0..1].to_i * 60 * 60
