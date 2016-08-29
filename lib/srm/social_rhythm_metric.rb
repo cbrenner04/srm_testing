@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'time'
 require 'yaml'
 
 # class for calculating the Social Rhytm Metric for use in RAY (Swartz)
